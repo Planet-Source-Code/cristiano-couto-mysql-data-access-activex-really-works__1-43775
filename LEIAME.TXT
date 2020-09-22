@@ -1,0 +1,119 @@
+*************************************************************************************
+*	TÍTULO....: INSTRUÇÕES PARA UTILIZAÇÃO DO COMPONENTE MYSQLDTA               *
+*                                                                                   *
+*       CRIADO POR: CRISTIANO COUTO                                                 *
+*       DATA......: 28 FEVEREIRO 2003                                               *
+*       VERSÃO....: 1.00                                                            *
+*                                                                                   *
+*************************************************************************************
+
+1 - INSTALAÇÃO DO COMPONENTE
+2 - COMPILAÇÃO DO CÓDIGO FONTE
+3 - EXMPLOS DE UTILIZAÇÃO
+
+-------------------------------------------------------------------------------------
+
+
+1 - INSTALAÇÃO DO COMPONENTE
+
+	PARA FAZER A INSTALAÇÃO DO COMPONENTE COMPILADO (MYSQLDTA.DLL) É NECESSÁRIO
+QUE O RUN-TIME DO VISUAL BASIC 6.0 ESTEJA INSTALADO NA MÁQUINA (MSVBVM60.DLL). ESTE REQUISITO É NECESSÁRIO,
+POIS O COMPONENTE FOI COMPILADO COM A VERSÃO 6.0 DO MS VISUAL BASIC. CASO VOCÊ UTILIZE A VERSÃO 5.0 DO 
+MS VISUAL BASIC, SERÁ NECESSÁRIO COMPILAR O CÓDIGO FONTE A PARTIR DO SEU MS VISUAL BASIC 5.0 
+(VEJA O TÓPICO 2 - COMPILAÇÃO DO CÓDIGO FONTE). ALÉM DESTA DLL, O COMPONENTE UTILIZA OUTRA DLL (API) DO MYSQL
+(LIBMYSQL.DLL), PORÉM A DLL ESTÁ CONTIDA DENTRO DO PRÓPRIO COMPONENTE, COMO UM ARQUIVO DE RECURSO E É
+AUTO-INSTALÁVEL, TANTO PARA A VERSÃO COMPILADA, COMO PARA O CÓDIGO FONTE.
+
+	PROCEDIMENTOS DE INSTALAÇÃO:
+
+	1) COPIE O ARQUIVO MYSQLDTA.DLL PARA SUA PASTA SYSTEM (NORMALMENTE NOS SISTEMAS WIN9X/ME, FICA EM 
+	C:\WINDOWS\SYSTEM, E NOS SISTEMAS WIN NT/2000/XP, FICA EM C:\WINDOWS\SYSTEM32)
+
+	2) EXECUTE O COMANDO C:\WINDOWS\SYSTEM\REGSVR32.EXE C:\WINDOWS\SYSTEM\MYQSLDTA.DLL
+		SUBSTITUA O CAMINHO, CONFORME AS CONFIGURAÇÕES DO SEU SISTEMA OPERACIONAL
+		ESTE COMANDO É NECESSÁRIO PARA REGISTRAR A DLL NO SISTEMA OPERACIONAL
+	3) PARA ADICIONAR ESTE COMPONENTE NO SEU PROJETO (NO VISUAL BASIC), ACESSE O MENU
+	PROJECT : REFERENCES, SELECIONE O COMPONENTE [MySQL Data Access ActiveX]. VIDE EXEMPLOS NOS 
+	ITENS 3.1.3, 3.2.3, 3.3.3, 3.4.3 DESTE DOCUMENTO.
+	
+2 - COMPILAÇÃO DO CÓDIGO FONTE
+
+	PARA FAZER A COMPILAÇÃO DO CÓDIGO FONTE DESTE COMPONENTE É MUITO SIMPLES, BASTA ABRIR O PROJETO
+MYSQLDTA.VBP E COMPILAR. CASO NECESSITE FAZER ALGUMA ALTERÇÃO NO CÓDIGO FONTE, ESTA SERÁ DE SUA RESPONSABILIDADE.
+	ACONSELHO A UTILIZAÇÃO DESTAS OPÇÕES PARA COMPILAÇÃO:
+
+	- COMPILE FOR NATIVE CODE
+		- OPTIMIZE FOR FAST CODE (ISTO TORNA AS CHAMADAS API MAIS RÁPIDAS)
+		- FAVOR PENTIUM PRO(tm) (ESTA OPÇÃO FAVORECE A COMPILAÇÃO SOBRE PROCESSADORES PENTIUM)
+		- CREATE SYMBOLIC DEBUG INFO (ESTA OPÇÃO É ÚTIL PARA DEPURAÇÃO, PODENDO SER USADO O DEBUGGER DO MSVC++)
+
+
+
+3 - EXMPLOS DE UTILIZAÇÃO
+
+Dim pMy As New MySQLDTA.MyConnection
+Dim pRs As MyRecordset
+
+Dim pFlds As New MyFields
+Dim pIdxs As New MyIndexes
+
+'Conectando banco de dados
+pMy.MyConnect "jacouto", "laj42290", "10.4.41.152"
+
+'Criando banco de dados
+pMy.MyCreateDatabase "banco_teste", True
+'Selecionando banco de dados
+pMy.MySelectDatabase "banco_teste"
+
+
+'Definindo estrutura da tabela
+With pFlds.Add
+    .MyFieldName = "codigo"
+    .MyFieldType = FIELD_TYPE_INT24
+    .MyFieldSize = 11
+    .MyFieldNull = False
+    .MyFieldDefault = 0
+    .MyFieldAutoIncrement = True
+End With
+
+With pFlds.Add
+    .MyFieldName = "data"
+    .MyFieldType = FIELD_TYPE_DATETIME
+    .MyFieldNull = False
+End With
+
+With pFlds.Add
+    .MyFieldName = "valor"
+    .MyFieldType = FIELD_TYPE_DECIMAL
+    .MyFieldSize = 11
+    .MyFieldDecimals = 2
+    .MyFieldNull = False
+    .MyFieldDefault = 0
+End With
+
+With pIdxs.Add
+    .MyIndexName = "pk_codigo"
+    .MyIndexPrimary = True
+    With .MyIndexFields.Add
+        .MyFieldName = "codigo"
+    End With
+End With
+
+With pIdxs.Add
+    .MyIndexName = "ix_data"
+    With .MyIndexFields.Add
+        .MyFieldName = "data"
+    End With
+End With
+
+'Criando a tabela
+pMy.MyCreateTable "tabela_teste", pFlds, pIdxs, False, MYISAM, MyOperationCreateNew
+
+'Fazendo um DUMP da tabela criada
+MsgBox pMy.MyDumpStructure("tabela_teste")
+
+pMy.MyDropTable "tabela_teste"
+pMy.MyDropDatabase "banco_teste"
+
+pMy.MyCloseConnection
+
